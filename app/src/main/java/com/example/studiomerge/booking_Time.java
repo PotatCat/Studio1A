@@ -16,8 +16,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -76,6 +78,7 @@ public class booking_Time extends AppCompatActivity {
                         data.put("charityName", editCharity.getText().toString());
                         data.put("date", editDate.getText().toString());
                         data.put("time", editTime.getText().toString());
+                        data.put("state", "booked");
 
 
                         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -103,9 +106,13 @@ public class booking_Time extends AppCompatActivity {
         }
         public void cancelbooking(String name) {
 
+            Map<String, Object> data = new HashMap<>();
+
+            data.put("state", "cancelled");
+
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection("bookings").document(name)
-                .delete()
+                .set(data)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -144,7 +151,27 @@ public class booking_Time extends AppCompatActivity {
                         }
                     });
         }
+        public void searchCharity(String name) {
 
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            CollectionReference charityRef = db.collection("users");
+
+            Query query = charityRef.whereEqualTo("type", "charity")
+                    .whereEqualTo("name", name)
+                    .orderBy("date", Query.Direction.DESCENDING)
+                    .orderBy("time", Query.Direction.DESCENDING);
+
+            query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if(task.isSuccessful()){
+                        for(QueryDocumentSnapshot document: task.getResult()){
+                            //display result here
+                        }
+                    }
+                }
+            });
+        }
     }
 
 
